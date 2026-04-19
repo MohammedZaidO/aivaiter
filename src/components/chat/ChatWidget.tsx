@@ -141,24 +141,24 @@ export default function ChatWidget() {
     rec.interimResults = false;
     rec.maxAlternatives = 1;
 
-    rec.onresult = (ev: any) => {
+    rec.onresult = (ev: Event & { results?: { transcript: string }[][] }) => {
       const transcript = ev.results?.[0]?.[0]?.transcript || "";
       if (transcript) setInput((prev) => (prev ? prev + " " : "") + transcript);
     };
-    rec.onerror = (ev: any) => {
+    rec.onerror = (ev: Event & { error?: string }) => {
       console.error("STT Error:", ev.error);
     };
 
     try {
       rec.start();
       setRecModalOpen(false);
-    } catch (e: any) {
-      alert("Could not start microphone. " + e.message);
+    } catch (e) {
+      alert("Could not start microphone. " + (e instanceof Error ? e.message : String(e)));
     }
   };
 
   const processBookingStep = async (userMessage: string, currentData: Record<string, string>) => {
-    let updatedData = extractSlots(userMessage, currentData);
+    const updatedData = extractSlots(userMessage, currentData);
 
     if (askingField && !updatedData[askingField]) {
       if (askingField === "name" || askingField === "specialRequest") {

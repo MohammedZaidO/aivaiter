@@ -1,7 +1,11 @@
-import { ArrowRight, MessageSquare } from "lucide-react";
-import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  onEnquiry: () => void;
+  onViewPlans: () => void;
+}
+
+export default function HeroSection({ onEnquiry, onViewPlans }: HeroSectionProps) {
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 overflow-hidden">
       {/* Background element */}
@@ -17,33 +21,32 @@ export default function HeroSection() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--gold-primary)] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--gold-light)]"></span>
             </span>
-            Meet The Ethereal Maître d&apos;
+            Multilingual AI Solutions for Hospitality
           </div>
           <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight mb-6">
-            AI receptionist for <br />
+            Intelligent <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--gold-primary)] to-[#fffdf5]">
-              restaurants and cafés
+              Concierge Service
             </span>
           </h1>
           <p className="text-lg md:text-xl text-foreground/80 mb-8 max-w-xl font-light leading-relaxed">
-            Answer customer questions, capture bookings, and reduce missed calls automatically. Elevate your hospitality with intelligent, always-on service.
+            Elevate your restaurant operations with an AI assistant that handles bookings, group events, and guest enquiries natively in multiple languages.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link 
-              href="#pricing"
-              className="px-8 py-4 bg-gradient-to-tr from-[var(--gold-primary)] to-[var(--gold-light)] text-[#121212] font-medium rounded-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2 group"
+            <button 
+              onClick={onEnquiry}
+              className="px-8 py-4 bg-gradient-to-tr from-[var(--gold-primary)] to-[var(--gold-light)] text-[#121212] font-medium rounded-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2 group premium-shimmer"
             >
-              Book a Demo
+              Partner With Us
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link 
-              href="#demo"
+            </button>
+            <button 
+              onClick={onViewPlans}
               className="px-8 py-4 bg-surface-high border border-surface-highest hover:border-[var(--gold-primary)]/50 text-foreground font-medium rounded-lg transition-all flex items-center justify-center gap-2"
             >
-              <MessageSquare className="w-4 h-4 text-[var(--gold-primary)]" />
-              Try Live Demo
-            </Link>
+              View Service Plans
+            </button>
           </div>
         </div>
 

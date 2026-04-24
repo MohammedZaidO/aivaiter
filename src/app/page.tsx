@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import HeroSection from "@/components/sections/HeroSection";
-import ChatWidget from "@/components/chat/ChatWidget";
+import ContactSection from "@/components/sections/ContactSection";
+import EnquiryModal from "@/components/modals/EnquiryModal";
 import { 
   PhoneMissed, 
   Clock, 
@@ -7,68 +11,89 @@ import {
   Users,
   MessageSquareReply,
   CalendarCheck,
-  Zap,
   Globe,
+  Zap,
   Quote,
-  CheckCircle2
+  CheckCircle2,
+  Trophy,
+  Users2
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Home() {
+  const [enquiryModal, setEnquiryModal] = useState({ isOpen: false, plan: "" });
+
+  const openEnquiry = (plan: string = "") => {
+    setEnquiryModal({ isOpen: true, plan });
+  };
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <main className="min-h-screen bg-background selection:bg-[var(--gold-primary)] selection:text-[#121212]">
       
       {/* 1. Hero Section */}
-      <HeroSection />
+      <HeroSection onEnquiry={() => openEnquiry()} onViewPlans={() => scrollTo('pricing')} />
 
-      {/* 2. Problem Section */}
+      {/* 2. Operational Value Section */}
       <section className="py-24 bg-surface-low relative border-t border-[rgba(212,175,55,0.05)]">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-3xl md:text-5xl mb-4">The Cost of Missed Connections</h2>
+            <h2 className="font-serif text-3xl md:text-5xl mb-4">Minimize Friction, Maximize Revenue</h2>
             <p className="text-foreground/70 max-w-2xl mx-auto text-lg font-light">
-              While your staff is busy serving the dining room, who is managing the digital front door?
+              Don&apos;t let busy rush hours or after-hours inquiries stop your growth.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: PhoneMissed, title: "Missed Calls", desc: "Rush hours mean unanswered phones and lost reservations." },
-              { icon: Clock, title: "After-hours Queries", desc: "Customers expect answers 24/7, even when you're closed." },
-              { icon: Users, title: "Staff Burnout", desc: "Answering the same repetitive FAQs wastes valuable time." },
-              { icon: CalendarX2, title: "Lost Bookings", desc: "Friction in reserving a table leads to abandoned bookings." },
+              { icon: PhoneMissed, title: "Unanswered Calls", desc: "Rush hours often mean lost reservations. Let AI handle the overflow." },
+              { icon: Users2, title: "Group Enquiries", desc: "Automate complex group and event booking requests instantly." },
+              { icon: Trophy, title: "Staff Efficiency", desc: "Free your team from repetitive FAQs so they can focus on guests." },
+              { icon: CalendarX2, title: "Booking Abandonment", desc: "Reduce friction with an always-on, multilingual booking assistant." },
             ].map((item, idx) => (
-              <div key={idx} className="bg-surface p-8 rounded-2xl border border-surface-highest hover:bg-surface-high transition-colors">
-                <div className="w-12 h-12 bg-surface-lowest rounded-xl flex items-center justify-center mb-6 text-[var(--gold-primary)] outline outline-1 outline-[rgba(212,175,55,0.2)]">
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-surface p-8 rounded-2xl border border-surface-highest hover:bg-surface-high transition-colors"
+              >
+                <div className="w-12 h-12 bg-surface-lowest rounded-xl flex items-center justify-center mb-6 text-[var(--gold-primary)] shadow-inner">
                   <item.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-medium mb-3">{item.title}</h3>
                 <p className="text-foreground/60 leading-relaxed font-light">{item.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 3. Solution / Features Section */}
+      {/* 3. Concierge Features */}
       <section className="py-24 relative overflow-hidden">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="font-serif text-3xl md:text-5xl mb-6">A Concierge That Never Sleeps</h2>
+              <h2 className="font-serif text-3xl md:text-5xl mb-6">Excellence in Every Interaction</h2>
               <p className="text-foreground/70 text-lg font-light mb-10 leading-relaxed">
-                AIVaiter integrates seamlessly with your operations to ensure every customer inquiry is met with the hospitality they deserve.
+                AIVaiter represents your brand with the precision and grace of a master Maître d&apos;, ensuring every guest feels valued.
               </p>
               
               <div className="space-y-8">
                 {[
-                  { icon: MessageSquareReply, title: "Instant FAQ Responses", desc: "Automatically handles menus, timings, location, and parking questions." },
-                  { icon: CalendarCheck, title: "Smart Reservation Capture", desc: "Guides users through booking, collects info, and alerts your team." },
-                  { icon: Globe, title: "Works Anywhere", desc: "Embed on your simple landing page, or let us host your digital storefront." },
-                  { icon: Zap, title: "Reduce Missed Opportunities", desc: "Turn after-hours website visitors into confirmed dining guests." },
+                  { icon: MessageSquareReply, title: "Intelligent Enquiries", desc: "Handles menu questions, dietary specifics, and parking details." },
+                  { icon: CalendarCheck, title: "Multi-Flow Bookings", desc: "Supports standard reservations, group events, and special pre-orders." },
+                  { icon: Globe, title: "True Multilingualism", desc: "Speak to guests natively in English or Hindi without translation lag." },
+                  { icon: Zap, title: "Instant Lead Capture", desc: "Push booking details directly to your email or management dashboard." },
                 ].map((feature, idx) => (
-                  <div key={idx} className="flex gap-4">
+                  <div key={idx} className="flex gap-4 group">
                     <div className="mt-1">
-                      <div className="w-8 h-8 rounded-full bg-[rgba(212,175,55,0.1)] flex items-center justify-center text-[var(--gold-primary)]">
+                      <div className="w-8 h-8 rounded-full bg-[rgba(212,175,55,0.1)] group-hover:bg-[var(--gold-primary)]/20 flex items-center justify-center text-[var(--gold-primary)] transition-colors">
                         <feature.icon className="w-4 h-4" />
                       </div>
                     </div>
@@ -83,15 +108,21 @@ export default function Home() {
             
             <div className="relative">
                <div className="absolute inset-0 bg-[var(--gold-primary)]/5 blur-3xl rounded-full" />
-               <div className="glass p-8 rounded-3xl relative">
-                  <div className="space-y-4">
+               <div className="glass p-8 rounded-3xl relative border border-[var(--gold-primary)]/10">
+                  <div className="space-y-6">
                      <div className="flex gap-4 items-center mb-6">
-                        <div className="w-10 h-10 bg-surface-low rounded-full animate-pulse" />
+                        <div className="w-10 h-10 bg-surface-low rounded-full bg-gradient-to-tr from-[var(--gold-primary)] to-[var(--gold-light)]" />
                         <div className="h-4 w-32 bg-surface-low rounded-md" />
                      </div>
-                     <div className="h-10 bg-surface-low rounded-lg w-full" />
-                     <div className="h-10 bg-surface-low rounded-lg w-5/6" />
-                     <div className="h-10 bg-surface-low rounded-lg w-4/6" />
+                     <div className="flex justify-start">
+                        <div className="h-10 bg-surface-low rounded-lg w-full animate-pulse" />
+                     </div>
+                     <div className="flex justify-end">
+                        <div className="h-10 bg-[var(--gold-primary)]/10 rounded-lg w-4/6" />
+                     </div>
+                     <div className="flex justify-start">
+                        <div className="h-24 bg-surface-low rounded-lg w-5/6" />
+                     </div>
                      <div className="mt-8 pt-6 border-t border-[rgba(212,175,55,0.1)] flex justify-between">
                          <div className="h-8 bg-[var(--gold-primary)]/20 rounded-md w-24" />
                          <div className="h-8 bg-surface-low rounded-md w-24" />
@@ -103,150 +134,146 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. How it works section */}
-      <section className="py-24 bg-surface-lowest">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="font-serif text-3xl md:text-5xl mb-16">Effortless Operations</h2>
-          
-          <div className="grid md:grid-cols-3 gap-8 relative max-w-5xl mx-auto">
-            {/* Connecting Line */}
-            <div className="hidden md:block absolute top-[60px] left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-[var(--gold-primary)]/30 to-transparent" />
-            
-            {[
-              { step: "01", title: "Customer Asks", desc: "A guest visits your site and asks a question about your menu or availability." },
-              { step: "02", title: "AI Answers & Captures", desc: "AIVaiter answers instantly and seamlessly transitions into collecting reservation details." },
-              { step: "03", title: "You Get the Lead", desc: "The booking lead is instantly sent to your dashboard or email for final confirmation." },
-            ].map((item, idx) => (
-              <div key={idx} className="relative z-10 flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full glass flex items-center justify-center font-serif text-xl text-[var(--gold-primary)] mb-6 shadow-[0_0_15px_rgba(212,175,55,0.15)]">
-                  {item.step}
-                </div>
-                <h3 className="text-xl font-medium mb-3">{item.title}</h3>
-                <p className="text-foreground/60 font-light">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* 4. Concierge Hub (Contact) */}
+      <ContactSection />
 
-      {/* 5. Live chatbot demo section */}
-      <section id="demo" className="py-32 relative">
-        <div className="container mx-auto px-6 text-center max-w-3xl">
-          <h2 className="font-serif text-4xl md:text-5xl mb-6">Experience the Service</h2>
-          <p className="text-foreground/70 text-lg font-light mb-10">
-            Interact with our live demo. Ask about our fictional restaurant &quot;Saffron Table&quot; or try booking a table for this weekend. AIVaiter is ready to assist you in the bottom right corner.
-          </p>
-          <div className="flex justify-center gap-4 text-sm font-light text-[var(--gold-primary)]">
-            <span className="bg-[rgba(212,175,55,0.1)] px-4 py-2 rounded-full border border-[rgba(212,175,55,0.2)]">Try: &quot;What are your timings?&quot;</span>
-            <span className="bg-[rgba(212,175,55,0.1)] px-4 py-2 rounded-full border border-[rgba(212,175,55,0.2)]">Try: &quot;I want to book a table&quot;</span>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Pricing Section */}
+      {/* 5. Pricing Section */}
       <section id="pricing" className="py-24 bg-surface-low border-y border-[rgba(212,175,55,0.05)]">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-3xl md:text-5xl mb-4">Investment in Excellence</h2>
+            <h2 className="font-serif text-3xl md:text-5xl mb-4">Investment in Automation</h2>
             <p className="text-foreground/70 max-w-2xl mx-auto text-lg font-light">
-              Simple, transparent pricing designed to scale with your hospitality business.
+              Premium solutions curated for modern hospitality businesses.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Starter */}
-            <div className="bg-surface p-8 rounded-2xl border border-surface-highest">
-              <h3 className="text-xl font-medium mb-2">Starter</h3>
-              <p className="text-foreground/60 text-sm mb-6">AI Receptionist Setup</p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-surface p-8 rounded-2xl border border-surface-highest flex flex-col"
+            >
+              <h3 className="text-xl font-medium mb-2">Essential</h3>
+              <p className="text-foreground/60 text-sm mb-6">Foundation AI Concierge</p>
               <div className="mb-8">
                 <span className="text-4xl font-serif">₹9,999</span>
                 <span className="text-foreground/50">/mo</span>
               </div>
-              <ul className="space-y-4 mb-8 text-sm font-light">
-                {['Custom knowledge base', 'Reservation capture', 'Embed on your site', 'Email notifications'].map((f, i) => (
+              <ul className="space-y-4 mb-8 text-sm font-light flex-1">
+                {['Custom knowledge base', '24/7 Reservation capture', 'Chat/Voice interaction', 'Email lead notifications'].map((f, i) => (
                   <li key={i} className="flex gap-3 items-center"><CheckCircle2 className="w-4 h-4 text-[var(--gold-primary)]" />{f}</li>
                 ))}
               </ul>
-              <button className="w-full py-3 rounded-lg border border-[var(--gold-primary)] text-[var(--gold-primary)] hover:bg-[var(--gold-primary)] hover:text-[#121212] transition-colors">Select Plan</button>
-            </div>
+              <button 
+                onClick={() => openEnquiry("Essential")}
+                className="w-full py-3 rounded-lg border border-[var(--gold-primary)]/40 text-[var(--gold-primary)] hover:bg-[var(--gold-primary)] hover:text-[#121212] transition-colors"
+              >
+                Select Plan
+              </button>
+            </motion.div>
 
             {/* Growth */}
-            <div className="bg-gradient-to-b from-[#2a2825] to-surface p-8 rounded-2xl border border-[var(--gold-primary)]/50 relative shadow-[0_0_30px_rgba(212,175,55,0.1)]">
-              <div className="absolute top-0 right-8 transform -translate-y-1/2 bg-[var(--gold-primary)] text-[#121212] text-xs font-medium px-3 py-1 rounded-full">
-                Most Popular
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="bg-gradient-to-b from-[#2a2825] to-surface p-8 rounded-2xl border border-[var(--gold-primary)] relative shadow-[0_0_40px_rgba(212,175,55,0.1)] flex flex-col"
+            >
+              <div className="absolute top-0 right-8 transform -translate-y-1/2 bg-[var(--gold-primary)] text-[#121212] font-semibold px-4 py-1.5 rounded-full uppercase tracking-tighter" style={{ fontSize: '10px' }}>
+                Highly Recommended
               </div>
-              <h3 className="text-xl font-medium mb-2 text-[var(--gold-primary)]">Growth</h3>
-              <p className="text-foreground/60 text-sm mb-6">AI Receptionist + Landing Page</p>
+              <h3 className="text-xl font-medium mb-2 text-[var(--gold-primary)]">Professional</h3>
+              <p className="text-foreground/60 text-sm mb-6">Concierge + Modern Presence</p>
               <div className="mb-8">
                 <span className="text-4xl font-serif">₹19,999</span>
                 <span className="text-foreground/50">/mo</span>
               </div>
-              <ul className="space-y-4 mb-8 text-sm font-light">
-                {['Everything in Starter', 'Premium landing page', 'Custom domain setup', 'SMS notifications', 'Priority support'].map((f, i) => (
+              <ul className="space-y-4 mb-8 text-sm font-light flex-1">
+                {['Everything in Essential', 'Premium storefront page', 'Custom domain setup', 'SMS status alerts', 'Priority 2-hour support'].map((f, i) => (
                   <li key={i} className="flex gap-3 items-center"><CheckCircle2 className="w-4 h-4 text-[var(--gold-primary)]" />{f}</li>
                 ))}
               </ul>
-              <button className="w-full py-3 rounded-lg bg-[var(--gold-primary)] text-[#121212] font-medium hover:brightness-110 transition-all">Select Plan</button>
-            </div>
+              <button 
+                onClick={() => openEnquiry("Professional")}
+                className="w-full py-3 rounded-lg bg-[var(--gold-primary)] text-[#121212] font-medium hover:brightness-110 transition-all shadow-lg"
+              >
+                Elevate Service
+              </button>
+            </motion.div>
 
             {/* Custom */}
-            <div className="bg-surface p-8 rounded-2xl border border-surface-highest">
-              <h3 className="text-xl font-medium mb-2">Custom</h3>
-              <p className="text-foreground/60 text-sm mb-6">Advanced Integrations</p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-surface p-8 rounded-2xl border border-surface-highest flex flex-col"
+            >
+              <h3 className="text-xl font-medium mb-2">Enterprise</h3>
+              <p className="text-foreground/60 text-sm mb-6">Bespoke Integrations</p>
               <div className="mb-8">
-                <span className="text-4xl font-serif">Let&apos;s Talk</span>
+                <span className="text-4xl font-serif">Bespoke</span>
               </div>
               <ul className="space-y-4 mb-8 text-sm font-light flex-1">
-                {['Direct POS integration', 'Multi-location setup', 'WhatsApp automation', 'Voice ordering API'].map((f, i) => (
+                {['POS system integration', 'Multi-location network', 'Custom API development', 'Dedicated account manager'].map((f, i) => (
                   <li key={i} className="flex gap-3 items-center"><CheckCircle2 className="w-4 h-4 text-[var(--gold-primary)]" />{f}</li>
                 ))}
               </ul>
-              <button className="w-full py-3 rounded-lg border border-surface-highest hover:border-[var(--gold-primary)] transition-colors mt-[4.5rem]">Contact Us</button>
-            </div>
+              <button 
+                onClick={() => openEnquiry("Enterprise")}
+                className="w-full py-3 rounded-lg border border-surface-highest hover:border-[var(--gold-primary)] transition-colors"
+              >
+                Consult Our Team
+              </button>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* 7. Value Proposition */}
-      <section className="py-24 relative">
+      {/* 6. Hospitality Quote */}
+      <section className="py-32 relative bg-surface-lowest">
         <div className="container mx-auto px-6 max-w-4xl text-center">
-          <Quote className="w-12 h-12 mx-auto text-[var(--gold-primary)]/40 mb-8" />
-          <p className="font-serif text-2xl md:text-3xl leading-relaxed mb-8 text-foreground/90">
-            &quot;Restaurants lose up to 20% of their table bookings to unanswered calls during rush hours. Automating the digital front desk isn&apos;t just about saving time—it&apos;s about reclaiming lost revenue.&quot;
+          <Quote className="w-12 h-12 mx-auto text-[var(--gold-primary)]/20 mb-10" />
+          <p className="font-serif text-3xl md:text-4xl leading-relaxed mb-10 text-foreground/90 italic">
+            &quot;Exceptional service is found in the speed and grace of your response. AIVaiter ensures your brand never misses a beat.&quot;
           </p>
-          <div>
-            <p className="font-medium text-[var(--gold-primary)]">The Hospitality Edge</p>
-            <p className="text-foreground/50 text-sm">Why modern restaurants adopt AI</p>
-          </div>
+          <div className="h-px w-24 bg-[var(--gold-primary)]/40 mx-auto mb-6" />
+          <p className="font-medium tracking-widest text-[var(--gold-primary)] uppercase text-sm">Mohammed Zaid | Founder</p>
         </div>
       </section>
 
-      {/* 8. Final CTA */}
-      <section className="py-24 relative overflow-hidden bg-[#0a0a0a]">
-        <div className="absolute inset-0 bg-[var(--gold-primary)]/5" />
+      {/* 7. Final CTA */}
+      <section className="py-24 relative overflow-hidden bg-black">
+        <div className="absolute inset-0 bg-[var(--gold-primary)]/5 opacity-50" />
         <div className="container mx-auto px-6 relative z-10 text-center max-w-2xl">
-          <h2 className="font-serif text-4xl md:text-5xl mb-6">Ready to upgrade your service?</h2>
-          <p className="text-foreground/70 text-lg mb-10 font-light">
-            Join the forward-thinking restaurants automating their front-of-house digital experience.
+          <h2 className="font-serif text-4xl md:text-6xl mb-8">Ready to evolve?</h2>
+          <p className="text-foreground/70 text-lg mb-12 font-light leading-relaxed">
+            Join the hospitality brands redefining the guest reception experience through intelligent automation.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="px-8 py-4 bg-[var(--gold-primary)] text-[#121212] font-medium rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
-              WhatsApp Us
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <button 
+              onClick={() => openEnquiry()}
+              className="px-10 py-5 bg-[var(--gold-primary)] text-[#121212] font-semibold rounded-full hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center gap-2"
+            >
+              Get Started Now
             </button>
-            <button className="px-8 py-4 bg-surface-high border border-surface-highest hover:border-[var(--gold-primary)]/50 text-foreground font-medium rounded-lg transition-all flex items-center justify-center gap-2">
-              Enquiry Form
+            <button 
+              onClick={() => scrollTo('contact')}
+              className="px-10 py-5 bg-surface-high border border-surface-highest hover:border-[var(--gold-primary)]/40 text-foreground font-medium rounded-full transition-all"
+            >
+              Schedule Consultation
             </button>
           </div>
         </div>
       </section>
 
-      <footer className="py-8 text-center text-sm text-foreground/40 border-t border-[rgba(212,175,55,0.1)]">
-        &copy; {new Date().getFullYear()} AIVaiter. All rights reserved.
-      </footer>
-
-      {/* Global Chat Widget */}
-      <ChatWidget />
-      
+      {/* Enquiry Modal */}
+      <EnquiryModal 
+        isOpen={enquiryModal.isOpen} 
+        onClose={() => setEnquiryModal({ ...enquiryModal, isOpen: false })}
+        initialPlan={enquiryModal.plan}
+      />
     </main>
   );
 }

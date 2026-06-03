@@ -42,3 +42,9 @@ next-env.d.ts
 
 RAGbot/
 .env.local
+
+# school-demo-app ignores
+school-demo-app/node_modules/
+school-demo-app/.next/
+school-demo-app/.env*
+

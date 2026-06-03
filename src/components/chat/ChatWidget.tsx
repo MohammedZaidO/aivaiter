@@ -4,14 +4,15 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send, UtensilsCrossed, X, MessageSquare, ChevronRight, ChevronLeft,
   Mic, Volume2, VolumeX, Globe, Calendar, Clock, Users, User, Phone,
-  Sparkles, Check, Minus, Plus
+  Sparkles, Check, Minus, Plus, Maximize2, Minimize2
 } from "lucide-react";
 import { restaurantConfig, mockAvailability, type TimeSlot } from "@/data/restaurant";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 import DepositModal from "./DepositModal";
 
 /* ─────────── Types ─────────── */
-type SessionLang = "en" | "hi";
+type SessionLang = "en" | "hi" | "ur";
 
 type Message = {
   id: string;
@@ -123,6 +124,47 @@ const LABELS: Record<SessionLang, Record<string, string>> = {
     groupSize: "अनुमानित ग्रुप साइज",
     groupSubmit: "ग्रुप पूछताछ भेजें",
     voiceMode: "वॉइस मोड"
+  },
+  ur: {
+    welcome: `${restaurantConfig.name} میں خوش آمدید! میں آپ کا ڈیجیٹل اسسٹنٹ ہوں۔ آج میں آپ کی کیا مدد کر سکتا ہوں؟`,
+    pickDate: "تاریخ منتخب کریں",
+    pickTime: "وقت کا انتخاب کریں",
+    pickGuests: "مہمانوں کی تعداد",
+    yourDetails: "آپ کی تفصیلات",
+    confirm: "بکنگ کی تصدیق کریں",
+    name: "پورا نام",
+    phone: "فون نمبر",
+    special: "کوئی خاص درخواست (اختیاری)",
+    none: "کچھ نہیں",
+    submit: "بکنگ کی درخواست بھیجیں",
+    back: "پیچھے",
+    next: "آگے",
+    slots: "دستیاب وقت",
+    limited: "محدود جگہ",
+    full: "جگہ نہیں ہے",
+    successPrefix: "شکریہ",
+    successBody: "آپ کی ٹیبل بکنگ کی درخواست موصول ہو گئی ہے۔ ہماری ٹیم جلد ہی تصدیق کے لیے رابطہ کرے گی۔",
+    preorderHeading: "پری آرڈر کی قسم منتخب کریں",
+    cake: "کیک / ڈیزرٹ",
+    decoration: "ٹیبل کی سجاوٹ",
+    surprise: "سرپرائز ترتیب",
+    preorderTextPlaceholder: "مثال: کیک پر 'ہیپی برتھ ڈے' لکھیں",
+    groupHeading: "گروپ کا سائز منتخب کریں",
+    groupTextPlaceholder: "کیا آپ کو کارپوریٹ ڈسکاؤنٹ یا بوفے کی ضرورت ہے؟",
+    depositTitle: "بکنگ فیس محفوظ کریں",
+    depositDesc: "آپ کی بکنگ کی تصدیق کے لیے ایک چھوٹی فیس درکار ہے۔",
+    paySecurely: "محفوظ طریقے سے ادائیگی کریں",
+    available: "دستیاب",
+    changeLang: "زبان تبدیل کریں",
+    reserve: "ٹیبل ریزرو کریں",
+    timings: "اوقات",
+    address: "پتہ",
+    vegOptions: "سبزی خور",
+    partyBooking: "پارٹی/تقریبات",
+    contact: "رابطہ",
+    preorderSubmit: "پری آرڈر بھیجیں",
+    groupSubmit: "گروپ انکوائری بھیجیں",
+    voiceMode: "وائس موڈ"
   }
 };
 
@@ -154,6 +196,7 @@ const FormattedMessage = ({ content }: { content: string }) => {
   // 2. Wrap blocks in clean containers
   // 3. Strip raw ** and _
   
+  if (!content) return null;
   const lines = content.split('\n');
   
   return (
@@ -209,7 +252,14 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [chatSession, setChatSession] = useState({
+    journey: "general" as "reservation" | "preorder" | "table_order" | "general" | null,
+    booking: { date: "", time: "", guests: null as number | null, specialRequest: "" },
+    cart: [] as any[],
+    tableId: null as string | null
+  });
 
   // Booking visual UI state
   const [bookingStep, setBookingStep] = useState<BookingStep>(null);
@@ -234,6 +284,35 @@ export default function ChatWidget() {
   const recognitionRef = useRef<any>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // Refs for resolving stale closures in async voice handlers
+  const chatSessionRef = useRef(chatSession);
+  const sessionLangRef = useRef(sessionLang);
+
+  useEffect(() => {
+    chatSessionRef.current = chatSession;
+  }, [chatSession]);
+
+  useEffect(() => {
+    sessionLangRef.current = sessionLang;
+  }, [sessionLang]);
+
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Check if we are in table mode
+    const match = pathname.match(/\/table\/(.+)/);
+    if (match && match[1]) {
+      const table = match[1];
+      setChatSession(prev => ({
+        ...prev,
+        tableId: table,
+        journey: "table_order"
+      }));
+      setIsOpen(true);
+      // Let the user select language first, then send an initial welcome message
+    }
+  }, [pathname]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen, bookingStep, isLoading]);
@@ -246,6 +325,7 @@ export default function ChatWidget() {
 
   /* ── Helpers ── */
   const addMessage = useCallback((role: "user" | "bot", content: string, lang?: string) => {
+    if (!content) return;
     setMessages(prev => [...prev, {
       id: Date.now().toString() + Math.random(),
       role,
@@ -255,8 +335,6 @@ export default function ChatWidget() {
   }, [sessionLang]);
 
   const selectLanguage = (lang: SessionLang) => {
-    // If in voice mode, only allow English
-    if (currentMode === 'voice' && lang !== 'en') return;
     
     setSessionLang(lang);
     setMessages([{
@@ -325,7 +403,7 @@ export default function ChatWidget() {
       .replace(/\s+/g, ' ')
       .trim();
 
-    const targetLang = (lang === "hi" || lang === "hi_latn") ? "hi" : "en";
+    const targetLang = (lang === "hi" || lang === "hi_latn") ? "hi" : (lang === "ur" ? "ur" : "en");
     const voices = window.speechSynthesis.getVoices();
     const preferred = voices.filter(v => v.lang.startsWith(targetLang));
     
@@ -339,7 +417,9 @@ export default function ChatWidget() {
     const localVoice = preferred.find(v => v.localService && v.lang.startsWith(targetLang));
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = lang === "hi" ? "hi-IN" : "en-GB"; 
+    utterance.lang = lang === "hi" ? "hi-IN" : (lang === "ur" ? "ur-PK" : "en-GB"); 
+    
+    // Fallback: If no preferred voice is found for the requested language, we still try the default voice but let it play
     utterance.voice = femaleVoice || premiumVoice || googleVoice || localVoice || preferred[0] || null;
     utterance.pitch = 1.15; // Slightly higher for clear female tone
     utterance.rate = 1.05; // Natural conversational tempo
@@ -401,7 +481,8 @@ export default function ChatWidget() {
 
     const rec = new SR();
     recognitionRef.current = rec;
-    rec.lang = currentMode === 'voice' ? "en-US" : (sessionLang === 'hi' ? "hi-IN" : "en-IN");
+    const sLang = sessionLangRef.current || 'en';
+    rec.lang = sLang === 'hi' ? "hi-IN" : (sLang === 'ur' ? "ur-PK" : "en-IN");
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     // rec.continuous = false; // We use recursion for loop
@@ -485,6 +566,19 @@ export default function ChatWidget() {
     addMessage("user", sessionLang === "hi"
       ? `${booking.dateLabel}, ${booking.time}, ${booking.guests} मेहमान`
       : `${booking.dateLabel}, ${booking.time}, ${booking.guests} guests`);
+    
+    // Crucial: Update the session memory so the AI knows the booking is confirmed
+    setChatSession(prev => ({
+      ...prev,
+      journey: "reservation",
+      booking: {
+        date: booking.dateLabel || booking.date,
+        time: booking.time,
+        guests: booking.guests,
+        specialRequest: booking.specialRequest
+      }
+    }));
+    
     setIsLoading(true);
 
     try {
@@ -540,13 +634,14 @@ export default function ChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           message: userMessage, 
-          lang: currentMode === 'voice' ? 'en' : sessionLang,
-          lastIntent: lastIntent 
+          lang: sessionLangRef.current,
+          session: chatSessionRef.current
         }),
       });
       const data = await response.json();
+      if (data.session) setChatSession(data.session);
       const botMsg = data.reply;
-      const botLang = data.lang || (currentMode === 'voice' ? 'en' : sessionLang) || "en";
+      const botLang = data.lang || sessionLangRef.current || "en";
       const newIntent = data.intent || null;
       
       addMessage("bot", botMsg, botLang);
@@ -953,6 +1048,49 @@ export default function ChatWidget() {
     );
   };
 
+  const renderSessionSummary = () => {
+    if (!chatSession.booking.date && chatSession.cart.length === 0) return null;
+
+    return (
+      <div className="flex flex-col gap-2 mt-2">
+        {chatSession.booking.date && (
+          <div className="bg-surface-low border border-[var(--gold-primary)]/30 p-3 rounded-xl flex justify-between items-center shadow-lg">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-[var(--gold-primary)] font-medium mb-0.5">{sessionLang === "hi" ? "रिज़र्वेशन" : sessionLang === "ur" ? "بکنگ" : "Reservation"}</p>
+              <p className="text-[13px] text-foreground/90 font-medium">
+                {chatSession.booking.date} 
+                {chatSession.booking.time ? ` at ${chatSession.booking.time}` : ''}
+                {chatSession.booking.guests ? ` for ${chatSession.booking.guests}` : ''}
+              </p>
+            </div>
+            <Calendar className="w-5 h-5 text-[var(--gold-primary)]/70" />
+          </div>
+        )}
+        
+        {chatSession.cart.length > 0 && (
+          <div className="bg-surface-low border border-emerald-500/30 p-3 rounded-xl shadow-lg">
+            <p className="text-[11px] uppercase tracking-wider text-emerald-400 font-medium mb-2 flex items-center gap-1.5"><UtensilsCrossed className="w-3.5 h-3.5"/> {sessionLang === "hi" ? "ऑर्डर" : sessionLang === "ur" ? "آرڈر" : "Order Summary"}</p>
+            {chatSession.cart.map((item, idx) => {
+               const price = restaurantConfig.fullMenu.flatMap(c => c.items).find(i => i.id === item.id)?.numericPrice || 0;
+               return (
+                <div key={idx} className="flex justify-between text-[13px] text-foreground/80 mb-1.5">
+                  <span className="truncate pr-2"><span className="text-foreground font-medium">{item.quantity}x</span> {item.name}</span>
+                  <span className="shrink-0 text-foreground">₹{price * item.quantity}</span>
+                </div>
+               );
+            })}
+            <div className="border-t border-surface-highest/80 mt-2.5 pt-2 flex justify-between font-medium text-sm">
+              <span className="text-foreground/80">{sessionLang === "hi" ? "कुल" : sessionLang === "ur" ? "کل" : "Total"}:</span>
+              <span className="text-[var(--gold-primary)]">
+                ₹{chatSession.cart.reduce((total, item) => total + (restaurantConfig.fullMenu.flatMap(c => c.items).find(i => i.id === item.id)?.numericPrice || 0) * item.quantity, 0)}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   /* ══════════════════════════════
      MAIN RENDER
   ══════════════════════════════ */
@@ -970,12 +1108,13 @@ export default function ChatWidget() {
             style={{ 
               position: 'fixed', 
               bottom: '100px', 
-              right: '24px', 
-              width: '400px', 
+              right: isExpanded ? 'calc(50vw - 400px)' : '24px', 
+              width: isExpanded ? '800px' : '400px', 
               maxWidth: 'calc(100vw - 48px)',
-              height: '600px', 
+              height: isExpanded ? '85vh' : '600px', 
               maxHeight: '85vh',
               zIndex: 9999,
+              transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               left: 'auto'
             }}
           >
@@ -991,9 +1130,14 @@ export default function ChatWidget() {
                     <p className="text-[10px] text-[var(--gold-primary)] opacity-80 uppercase tracking-wider">{restaurantConfig.name}</p>
                   </div>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-surface-low rounded-full transition-colors text-foreground/40">
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setIsExpanded(e => !e)} className="p-1.5 hover:bg-surface-low rounded-full transition-colors text-foreground/40" title="Toggle Size">
+                    {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  </button>
+                  <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-surface-low rounded-full transition-colors text-foreground/40" title="Close">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Segmented Mode Switcher */}
@@ -1035,11 +1179,15 @@ export default function ChatWidget() {
                 <div className="flex flex-col gap-3 w-full max-w-[220px]">
                   <button onClick={() => selectLanguage("en")}
                     className="w-full py-3.5 rounded-xl border border-surface-highest text-sm font-medium hover-lift chip-hover flex items-center justify-center gap-2 bg-surface">
-                    🇬🇧 English
+                    English
                   </button>
                   <button onClick={() => selectLanguage("hi")}
                     className="w-full py-3.5 rounded-xl border border-surface-highest text-sm font-medium hover-lift chip-hover flex items-center justify-center gap-2 bg-surface">
-                    🇮🇳 हिंदी
+                    हिंदी
+                  </button>
+                  <button onClick={() => selectLanguage("ur")}
+                    className="w-full py-3.5 rounded-xl border border-surface-highest text-[16px] font-medium hover-lift chip-hover flex items-center justify-center gap-2 bg-surface font-serif">
+                    اردو
                   </button>
                 </div>
               </motion.div>
@@ -1095,6 +1243,9 @@ export default function ChatWidget() {
                       </div>
                     </motion.div>
                   ))}
+
+                  {/* Session Summary (Bookings/Cart) */}
+                  {renderSessionSummary()}
 
                   {/* Quick Chips */}
                   {!isLoading && messages.length > 0 && messages[messages.length - 1]?.role === "bot" && (
